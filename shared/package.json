@@ -1,0 +1,10 @@
+{
+    "name": "shared",
+    "version": "5.0.1",
+    "private": true,
+    "type": "module",
+    "exports": {
+        "./domain.js": "./domain.js",
+        "./response.js": "./response.js"
+    }
+}

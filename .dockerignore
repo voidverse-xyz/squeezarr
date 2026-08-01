@@ -1,0 +1,31 @@
+# Version control & editor/agent metadata
+.git
+.gitignore
+.codex
+Agents
+
+# Dependencies & build artifacts (reinstalled/rebuilt inside the image)
+node_modules
+.next
+out
+build
+
+# Container & compose files
+Containerfile
+Containerfile.local
+compose.yaml
+
+# Runtime state / bind-mounted volumes (must never be copied into the image)
+config
+data
+
+# Tooling config not needed for the production build
+eslint.config.mjs
+components.json
+
+# Docs, env files, and stray local files
+docs
+*.md
+*.txt
+.env*
+.DS_Store

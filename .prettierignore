@@ -1,0 +1,13 @@
+# Build output & dependencies
+node_modules
+.next
+build
+out
+
+# Runtime data & generated state (bind-mounted volumes)
+config
+data
+
+# Static assets & lockfile
+public
+package-lock.json

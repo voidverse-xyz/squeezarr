@@ -1,0 +1,88 @@
+services:
+    app:
+        build:
+            context: ./
+            dockerfile: Containerfile.local
+        ports:
+            - "3001:3000"
+        volumes:
+            - squeezarr-config:/config
+            - ./data:/data
+        environment:
+            - NODE_ENV=production
+            - CONFIG_DIR=/config
+            - SQUEEZARR_PASSWORD=${SQUEEZARR_PASSWORD:-}
+            - SQUEEZARR_RUNNER_TOKEN=${SQUEEZARR_RUNNER_TOKEN:-}
+            # Optional: label this node in the Workers UI (defaults to the container hostname).
+            # - NODE_NAME=monitor
+            # Server-controlled paths (NOT settable via the UI/API, for security). Defaults shown.
+            # - DATA_DIR=/data
+            # - FFMPEG_PATH=ffmpeg
+            # - FFPROBE_PATH=ffprobe
+            # Expand (never replace) the allowlist of ffmpeg flags a transcode setting may use.
+            # Space/comma separated; only add options you trust (filters can read files).
+            # - FFMPEG_EXTRA_FLAGS=-vf -af
+        restart: unless-stopped
+        stop_grace_period: 40s
+        develop:
+            watch:
+                # Backend source syncs straight in (restart picks it up). The frontend is a
+                # static build, so a change there triggers a rebuild of the image's `out`.
+                - path: ./backend/routes
+                  action: sync+restart
+                  target: /server/backend/routes
+                - path: ./backend/controllers
+                  action: sync+restart
+                  target: /server/backend/controllers
+                - path: ./backend/services
+                  action: sync+restart
+                  target: /server/backend/services
+                - path: ./backend/database
+                  action: sync+restart
+                  target: /server/backend/database
+                - path: ./backend/utilities
+                  action: sync+restart
+                  target: /server/backend/utilities
+                - path: ./backend/server.js
+                  action: sync+restart
+                  target: /server/backend/server.js
+                - path: ./shared
+                  action: sync+restart
+                  target: /server/shared
+                - path: ./frontend/src
+                  action: rebuild
+                - path: ./package.json
+                  action: rebuild
+    # Optional extra transcode runner(s). A process with HOST_IP set starts *only* a runner —
+    # no Express, no mongod, no DB — and connects to the monitor (`app`) over WebSocket to do
+    # transcodes. Requirements: it needs ffmpeg (already in the image) and the SAME /data mount as
+    # the monitor (the runner reads the source and writes the output on shared storage); it does
+    # NOT mount /config. Enable with `--profile runner`; scale with `--scale runner=N` for N
+    # concurrent transcodes.
+    runner:
+        profiles:
+            - runner
+        build:
+            context: ./
+            dockerfile: Containerfile.local
+        volumes:
+            - ./data:/data
+        environment:
+            - NODE_ENV=production
+            - HOST_IP=app
+            - SQUEEZARR_RUNNER_TOKEN=${SQUEEZARR_RUNNER_TOKEN:-}
+            # Optional: label this runner in the Workers UI (defaults to the container hostname).
+            # Leave unset when scaling so each container keeps its unique hostname.
+            # - NODE_NAME=runner-1
+        # command: ["node", "/server/backend/server.js"]
+        depends_on:
+            - app
+        # Runner-only mode intentionally exposes no HTTP server; the image healthcheck is for
+        # monitor readiness and must not be applied here.
+        healthcheck:
+            disable: true
+        restart: unless-stopped
+        stop_grace_period: 40s
+
+volumes:
+    squeezarr-config:
