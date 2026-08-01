@@ -1,0 +1,24 @@
+{
+    "name": "squeezarr",
+    "version": "5.0.1",
+    "private": true,
+    "type": "module",
+    "workspaces": [
+        "shared",
+        "backend",
+        "frontend"
+    ],
+    "scripts": {
+        "start": "node backend/server.js",
+        "dev:backend": "PORT=4000 node backend/server.js",
+        "dev:frontend": "npm run dev -w frontend",
+        "build": "npm run build -w frontend",
+        "test": "npm test -w backend && npm test -w frontend",
+        "lint": "npm run lint -w frontend && npm run lint -w backend",
+        "format": "prettier --write .",
+        "format:check": "prettier --check ."
+    },
+    "devDependencies": {
+        "prettier": "3.8.4"
+    }
+}
