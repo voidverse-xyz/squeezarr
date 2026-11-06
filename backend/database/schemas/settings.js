@@ -101,7 +101,7 @@ export function getSchema() {
                 default: ["mkv", "mp4", "avi", "mov", "ts", "m2ts", "wmv", "flv", "webm"],
             },
             autoScanIntervalMinutes: { type: Number, default: 60 },
-            processingPaused: { type: Boolean, default: false },
+            processingPaused: { type: Boolean, default: true },
             builtinOverrides: {
                 type: [new Schema({ id: String, enabled: Boolean }, { _id: false })],
                 default: [],

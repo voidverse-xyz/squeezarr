@@ -57,7 +57,8 @@ test("a new Settings document has the general defaults and no stored presets", (
 
     assert.equal(settings.settingsId, SETTINGS_DOC_ID);
     assert.equal(settings.autoScanIntervalMinutes, 60);
-    assert.equal(settings.processingPaused, false);
+    assert.equal(settings.processingPaused, true);
+    assert.equal(new Settings({ processingPaused: false }).processingPaused, false);
     // dataDir / ffmpegPath / ffprobePath are server config (env), no longer on the settings doc.
     assert.equal(settings.dataDir, undefined);
 
