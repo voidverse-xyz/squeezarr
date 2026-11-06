@@ -3,8 +3,9 @@
 // never a thrown exception. There is no auth/role argument — this is a single-user, single-instance
 // app (see AGENTS.md).
 import { access, rename, unlink } from "fs/promises";
+import path from "path";
 import * as db from "../../database/index.js";
-import { eventService, processingService, loggingService, jobService } from "../../services/index.js";
+import { eventService, processingService, loggingService, jobService, ffmpegService } from "../../services/index.js";
 import {
     COLLECTION,
     FILE_STATUS,
@@ -189,10 +190,21 @@ export async function replace(fileId, settingId) {
             return getResult(false, "transcode_result_not_found");
         }
 
+        if (path.extname(result.outputPath).toLowerCase() !== path.extname(file.path).toLowerCase()) {
+            return getResult(false, "output_extension_mismatch");
+        }
+
         try {
             await access(result.outputPath);
         } catch {
             return getResult(false, "output_missing_on_disk");
+        }
+
+        let outputStat;
+        try {
+            outputStat = await ffmpegService.validateOutput(result.outputPath);
+        } catch {
+            return getResult(false, "invalid_transcode_output");
         }
 
         try {
@@ -208,7 +220,7 @@ export async function replace(fileId, settingId) {
             status: FILE_STATUS.replaced,
             replaced: true,
             replacedAt: new Date().toISOString(),
-            size: result.outputSize,
+            size: outputStat.size,
             transcodeResults: (f.transcodeResults || []).map((r) =>
                 r.settingId === settingId ? { ...r, outputPath: null, status: RESULT_STATUS.replaced } : r,
             ),

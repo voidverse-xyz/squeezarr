@@ -156,6 +156,10 @@ export default function SettingForm({ initial, onSave, onCancel, busy = false })
                 </div>
             </FormField>
 
+            {form.outputMode === OUTPUT_MODE.overwrite && (
+                <p className="text-xs text-muted-foreground">{t.settings.overwriteHint}</p>
+            )}
+
             {form.outputMode === OUTPUT_MODE.adjacent && (
                 <div className="grid grid-cols-3 gap-3 pl-4 border-l border-border">
                     <FormField label={t.settings.fieldPrefix}>

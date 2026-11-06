@@ -1,6 +1,7 @@
 // Monitor-side finalization. Every filesystem or terminal transition is fenced by the persisted
 // job owner and prepared output path; jobId is the task generation.
 import { constants } from "fs";
+import path from "path";
 import { access, lstat, stat, unlink, rename, link } from "fs/promises";
 import * as db from "../../database/index.js";
 import * as settings from "../settings.js";
@@ -8,6 +9,7 @@ import * as jobService from "../job.js";
 import * as processing from "../processing.js";
 import * as logging from "../logging.js";
 import { runFilters } from "../filters.js";
+import { probeMedia } from "../probe.js";
 import { resolveSetting } from "./shared.js";
 import { buildResult, mergeTranscodeResult, upsertTranscodeResult } from "./results.js";
 import { COLLECTION, FILE_STATUS, RESULT_STATUS, OUTPUT_MODE } from "shared/domain.js";
@@ -36,6 +38,17 @@ export async function validateOutput(outputPath) {
         throw new Error(`Expected output is not a regular file: ${outputPath}`);
     }
     await access(outputPath, constants.R_OK);
+    if (outputStat.size === 0) {
+        throw new Error("Transcode output is empty");
+    }
+    const { stdout } = await probeMedia(outputPath);
+    const media = JSON.parse(stdout);
+    const video = media.streams?.find(
+        (stream) => stream.codec_type === "video" && stream.disposition?.attached_pic !== 1,
+    );
+    if (!video?.codec_name || video.codec_name === "unknown" || !(video.width > 0) || !(video.height > 0)) {
+        throw new Error("Transcode output has no valid video stream");
+    }
     return outputStat;
 }
 
@@ -466,6 +479,10 @@ export async function finalizeTranscode(job, result) {
             return { stopped: true };
         }
 
+        // Also fence jobs prepared before overwrite paths began preserving the source extension.
+        if (ctx.isOverwrite && path.extname(ctx.outputPath).toLowerCase() !== path.extname(file.path).toLowerCase()) {
+            throw new Error("Overwrite output extension differs from the original");
+        }
         await validateOutput(ctx.outputPath);
         const beforeFilters = await processing.getOwnedFile(fileId, job.jobId, settingId);
         if (!beforeFilters || beforeFilters.cancelled || beforeFilters.status === FILE_STATUS.stopped) {
