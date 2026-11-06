@@ -32,10 +32,9 @@ const transcodeSettingSchema = new Schema(
     { _id: false },
 );
 
-// Built-in transcode presets — the source of truth lives here in code, NOT the database.
-// settingsService merges these into every read (flagged `isDefault`) and strips them before any
-// write, so editing this list takes effect immediately with no DB migration. The stored doc only
-// ever holds the user's own settings; `transcodeSettings` therefore defaults to [] in the schema.
+// Built-in definitions live in code. settingsService merges them on read (flagged `isDefault`),
+// applying persisted enabled overrides. Other fields always come from these definitions.
+// Only custom profiles are stored in `transcodeSettings`, which defaults to [].
 export const DEFAULT_TRANSCODE_SETTINGS = [
     {
         id: "default-hevc",
@@ -103,6 +102,10 @@ export function getSchema() {
             },
             autoScanIntervalMinutes: { type: Number, default: 60 },
             processingPaused: { type: Boolean, default: false },
+            builtinOverrides: {
+                type: [new Schema({ id: String, enabled: Boolean }, { _id: false })],
+                default: [],
+            },
             transcodeSettings: {
                 type: [transcodeSettingSchema],
                 default: [], // only user settings are stored; built-ins are merged in from code at read time

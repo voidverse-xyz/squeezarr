@@ -26,7 +26,7 @@ function summarizeMedia(ffprobeData) {
 }
 
 function resolveOutputExtension(setting, inputExt) {
-    if (!setting.outputExtension) {
+    if (setting.outputMode === OUTPUT_MODE.overwrite || !setting.outputExtension) {
         return inputExt;
     }
     return setting.outputExtension.startsWith(".") ? setting.outputExtension : `.${setting.outputExtension}`;

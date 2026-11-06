@@ -165,6 +165,9 @@ export const locales = {
             pauseReconciliationRequired:
                 "The outcome is unknown. Processing stays disabled until current dashboard state is refreshed.",
             actionErrors: {
+                output_extension_mismatch:
+                    "The output extension differs from the original. Use an output with the same extension to replace it.",
+                invalid_transcode_output: "The output is empty or is not valid video. The original was kept.",
                 scan: "Couldn't start the scan.",
                 processing: "Couldn't update processing.",
                 workerPause: "Couldn't update the worker.",
@@ -318,6 +321,8 @@ export const locales = {
             fieldFlagsPlaceholder: "-c:v libx265 -crf 26 -preset slow -c:a copy",
 
             fieldOutputMode: "Output Mode",
+            overwriteHint:
+                "Keeps the original filename and container extension. The adjacent output extension is ignored.",
             fieldPrefix: "Prefix",
             fieldSuffix: "Suffix",
             fieldSuffixPlaceholder: ".hevc",
@@ -496,6 +501,9 @@ export const locales = {
             pauseReconciliationRequired:
                 "El resultado es incierto. El procesamiento queda deshabilitado hasta actualizar el estado actual del panel.",
             actionErrors: {
+                output_extension_mismatch:
+                    "La extensión de salida difiere de la original. Use una salida con la misma extensión para reemplazarla.",
+                invalid_transcode_output: "La salida está vacía o no es un video válido. Se conservó el original.",
                 scan: "No se pudo iniciar el escaneo.",
                 processing: "No se pudo actualizar el procesamiento.",
                 workerPause: "No se pudo actualizar el worker.",
@@ -652,6 +660,8 @@ export const locales = {
             fieldFlagsPlaceholder: "-c:v libx265 -crf 26 -preset slow -c:a copy",
 
             fieldOutputMode: "Modo de Salida",
+            overwriteHint:
+                "Conserva el nombre y la extensión del contenedor original. Se ignora la extensión de salida adyacente.",
             fieldPrefix: "Prefijo",
             fieldSuffix: "Sufijo",
             fieldSuffixPlaceholder: ".hevc",

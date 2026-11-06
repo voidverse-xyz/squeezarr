@@ -4,8 +4,8 @@ import { DEFAULT_TRANSCODE_SETTINGS } from "../database/schemas/settings.js";
 import * as logging from "./logging.js";
 import { COLLECTION, SETTINGS_DOC_ID } from "shared/domain.js";
 
-// Built-in presets are sourced from code, never persisted. They carry a "default-" id prefix, so we
-// can recognise (and drop) any that linger in an older stored doc from before this rule existed.
+// Built-in definitions are sourced from code; only enabled overrides are persisted separately.
+// The "default-" id prefix identifies legacy stored definitions so they cannot shadow code.
 const BUILTIN_ID_PREFIX = "default-";
 const isBuiltin = (s) => s?.isDefault === true || (typeof s?.id === "string" && s.id.startsWith(BUILTIN_ID_PREFIX));
 let mutationQueue = Promise.resolve();
@@ -27,10 +27,14 @@ function revisionFor(settings) {
 
 // The transcode list everything reads: the built-in presets (from code, flagged `isDefault`) first,
 // then the user's own settings (from the DB). Built-ins are merged on every read, so editing
-// DEFAULT_TRANSCODE_SETTINGS in code takes effect with no database change. Any built-in still sitting
+// DEFAULT_TRANSCODE_SETTINGS in code takes effect except for saved enabled overrides. Any built-in still sitting
 // in the stored doc (legacy) is filtered out here so it can't shadow the code copy.
 function mergeTranscodeSettings(stored) {
-    const builtins = DEFAULT_TRANSCODE_SETTINGS.map((s) => ({ ...s, isDefault: true }));
+    const builtins = DEFAULT_TRANSCODE_SETTINGS.map((s) => ({
+        ...s,
+        enabled: stored?.builtinOverrides?.find((override) => override.id === s.id)?.enabled ?? s.enabled,
+        isDefault: true,
+    }));
     const userSettings = (stored?.transcodeSettings || [])
         .filter((s) => !isBuiltin(s))
         .map((s) => ({ ...s, isDefault: false }));
@@ -58,10 +62,15 @@ export function save(settings) {
         // Pause is authoritative and can only be changed by setProcessing(). A general replacement
         // always carries forward the latest server value, even when its client snapshot is stale.
         const userSettings = (settings.transcodeSettings || []).filter((s) => !isBuiltin(s));
+        const builtinOverrides = current.transcodeSettings.filter(isBuiltin).map((builtin) => ({
+            id: builtin.id,
+            enabled: settings.transcodeSettings?.find((s) => s.id === builtin.id)?.enabled ?? builtin.enabled,
+        }));
         await db.add(COLLECTION.settings, SETTINGS_DOC_ID, {
             videoExtensions: settings.videoExtensions,
             autoScanIntervalMinutes: settings.autoScanIntervalMinutes,
             processingPaused: current.processingPaused,
+            builtinOverrides,
             transcodeSettings: userSettings,
         });
         return { value: await get() };

@@ -150,7 +150,7 @@ test("output validation requires a readable regular non-symlink file", async () 
         await assert.rejects(validateOutput(output), /not a regular file/);
         await rm(output);
         await writeFile(output, "media");
-        assert.equal((await validateOutput(output)).size, 5);
+        await assert.rejects(validateOutput(output), /Command failed/);
     } finally {
         await rm(dir, { recursive: true, force: true });
     }

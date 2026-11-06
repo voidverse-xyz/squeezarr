@@ -10,14 +10,9 @@ import { useI18n } from "@/context/i18n";
 // any setting form (new or edit) is open, matching the original single-form-at-a-time UX.
 export default function SettingCard({ setting, formActive, onToggleEnabled, onEdit, onDelete }) {
     const { t } = useI18n();
-    // Built-in defaults are code-sourced and read-only: their enabled state can't be toggled and they
-    // can't be deleted (editing one forks a copy). User settings keep the full controls.
+    // Built-in definitions stay code-sourced; enabled overrides persist, and editing forks a copy.
     const isDefault = setting.isDefault;
-    const enabledTitle = isDefault
-        ? t.settings.defaultBadge
-        : setting.enabled === false
-          ? t.settings.enableTitle
-          : t.settings.disableTitle;
+    const enabledTitle = setting.enabled === false ? t.settings.enableTitle : t.settings.disableTitle;
     return (
         <Card
             className={cn("px-3 py-3 hover:bg-muted/5 transition-opacity", setting.enabled === false && "opacity-50")}
@@ -27,8 +22,8 @@ export default function SettingCard({ setting, formActive, onToggleEnabled, onEd
                     <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-sm font-medium">{setting.name}</span>
                         <button
-                            onClick={() => !formActive && !isDefault && onToggleEnabled(setting.id)}
-                            disabled={formActive || isDefault}
+                            onClick={() => !formActive && onToggleEnabled(setting.id)}
+                            disabled={formActive}
                             title={enabledTitle}
                             className={`text-[10px] px-1.5 py-0.5 rounded border transition-colors disabled:cursor-default ${
                                 setting.enabled === false

@@ -262,7 +262,9 @@ function Dashboard() {
             {currentActionError && (
                 <Card className="p-3 flex items-center justify-between gap-3 text-sm text-red-400">
                     <span>
-                        {t.dashboard.actionErrors[currentActionError.type] || t.dashboard.actionErrors.default}
+                        {t.dashboard.actionErrors[currentActionError.result?.output] ||
+                            t.dashboard.actionErrors[currentActionError.type] ||
+                            t.dashboard.actionErrors.default}
                         {currentActionError.ambiguous
                             ? ` ${
                                   currentActionError.replayBlocked

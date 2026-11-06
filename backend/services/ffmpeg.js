@@ -6,4 +6,4 @@
 // shared /data mount, so the monitor can do the filesystem work after ffmpeg has exited on the
 // runner.
 export { prepareTranscode } from "./ffmpeg/prepare.js";
-export { finalizeTranscode } from "./ffmpeg/finalize.js";
+export { finalizeTranscode, validateOutput } from "./ffmpeg/finalize.js";
